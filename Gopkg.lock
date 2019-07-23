@@ -15,46 +15,82 @@
   version = "v1.11.1"
 
 [[projects]]
-  digest = "1:44e53cf851fe4b60302cc063c6f12c800ce3efd64fcd6392a4f983707a99643a"
-  name = "github.com/aws/aws-sdk-go"
-  packages = [
-    "aws",
-    "aws/awserr",
-    "aws/awsutil",
-    "aws/client",
-    "aws/client/metadata",
-    "aws/credentials",
-    "aws/endpoints",
-    "aws/request",
-    "aws/signer/v4",
-    "internal/ini",
-    "internal/sdkio",
-    "internal/sdkrand",
-    "internal/shareddefaults",
-    "private/protocol",
-    "private/protocol/query",
-    "private/protocol/query/queryutil",
-    "private/protocol/rest",
-    "private/protocol/xml/xmlutil",
-    "service/iam",
-  ]
+  digest = "1:d917313f309bda80d27274d53985bc65651f81a5b66b820749ac7f8ef061fd04"
+  name = "github.com/sergi/go-diff"
+  packages = ["diffmatchpatch"]
   pruneopts = "UT"
-  revision = "420cda5d6383f94f7d9c231aa44bad3325181950"
-  version = "v1.20.20"
+  revision = "1744e2970ca51c86172c8190fadad617561ed6e7"
+  version = "v1.0.0"
 
 [[projects]]
-  digest = "1:bb81097a5b62634f3e9fec1014657855610c82d19b9a40c17612e32651e35dca"
-  name = "github.com/jmespath/go-jmespath"
+  digest = "1:d888308f8887be8103266d138aecb35bc165e16b743661c060faf61d32453b4d"
+  name = "github.com/src-d/go-git"
   packages = ["."]
   pruneopts = "UT"
-  revision = "c2b33e84"
+  revision = "02c228585e543413479ea36d3a2bbc80a070eb93"
+  version = "v3.2.0"
+
+[[projects]]
+  branch = "master"
+  digest = "1:ffebede762b00a7ffe84ef08efc4f4e87823b5298b4fd477313579f553db0c6a"
+  name = "golang.org/x/crypto"
+  packages = [
+    "curve25519",
+    "ed25519",
+    "ed25519/internal/edwards25519",
+    "internal/chacha20",
+    "internal/subtle",
+    "poly1305",
+    "ssh",
+  ]
+  pruneopts = "UT"
+  revision = "4def268fd1a49955bfb3dda92fe3db4f924f2285"
+
+[[projects]]
+  branch = "master"
+  digest = "1:9289797869517c73400e7b5a93beefbfc86e06f56e3ab03f38fb0d575e685277"
+  name = "golang.org/x/sys"
+  packages = ["cpu"]
+  pruneopts = "UT"
+  revision = "fae7ac547cb717d141c433a2a173315e216b64c4"
+
+[[projects]]
+  digest = "1:6432785f8a6e930ab914151f8a89a7f3156b0981342e39b2ebc471f0f2b54cdd"
+  name = "gopkg.in/sourcegraph/go-vcsurl.v1"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "6b12603ea6fd7f84b8c90118face09df39ea10c6"
+  version = "v1"
+
+[[projects]]
+  digest = "1:93c77383a2c5bbd311ac591edd18da20b0b52ddbc6bd3b0f3e57f5aff953ba27"
+  name = "gopkg.in/src-d/go-git.v3"
+  packages = [
+    "clients",
+    "clients/common",
+    "clients/http",
+    "clients/ssh",
+    "core",
+    "diff",
+    "formats/idxfile",
+    "formats/packfile",
+    "formats/pktline",
+    "storage/memory",
+    "storage/seekable",
+    "storage/seekable/internal/gitdir",
+    "storage/seekable/internal/index",
+    "utils/fs",
+  ]
+  pruneopts = "UT"
+  revision = "02c228585e543413479ea36d3a2bbc80a070eb93"
+  version = "v3.2.0"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
     "github.com/aws/aws-lambda-go/lambda",
-    "github.com/aws/aws-sdk-go/service/iam",
+    "github.com/src-d/go-git",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
