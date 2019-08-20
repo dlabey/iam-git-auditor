@@ -13,22 +13,7 @@ import (
 	"sync"
 )
 
-type LambdaEvent struct {
-	Records []CloudTrailEvent `json:"Records"`
-}
-
-type CloudTrailEvent struct {
-	ErrorCode         string            `json:"errorCode"`
-	EventID           string            `json:"eventID"`
-	EventName         string            `json:"eventName"`
-	EventTime         string            `json:"eventTime"`
-	EventType         string            `json:"eventType"`
-	RequestParameters RequestParameters `json:"requestParameters"`
-	ResponseElements  ResponseElements  `json:"responseElements"`
-	UserIdentity      UserIdentity      `json:"userIdentity"`
-}
-
-func HandleRequest(evt LambdaEvent, ctx context.Context) (*string, error) {
+func audit(evt SQSEvent, ctx context.Context) (*string, error) {
 	// Initialize dotenv
 	err := godotenv.Load()
 	checkError(err, fmt.Sprintf("Error loading .env file: %s", err))
@@ -96,12 +81,6 @@ func HandleRequest(evt LambdaEvent, ctx context.Context) (*string, error) {
 	return "end", nil
 }
 
-func checkError(err error, msg string) {
-	if err != nil {
-		log.Panic(msg)
-	}
-}
-
 func main() {
-	lambda.Start(HandleRequest)
+	lambda.Start(audit)
 }
