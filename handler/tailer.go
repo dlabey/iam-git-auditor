@@ -21,7 +21,7 @@ type TailResponse struct {
 	Failed     int64 `json:"Failed"`
 }
 
-func Tail(evt CloudTrailEvents, ctx context.Context) (*TailResponse, error) {
+func Tail(ctx context.Context, evt CloudTrailEvents) (*TailResponse, error) {
 	// Initialize dotenv
 	err := godotenv.Load()
 	checkError(err, fmt.Sprintf("Error loading .env file: %s", err))
