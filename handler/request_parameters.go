@@ -5,4 +5,5 @@ type RequestParameters struct {
 	PolicyDocument string `json:"policyDocument"`
 	PolicyName     string `json:"policyName"`
 	RoleName       string `json:"roleName"`
+	VersionId      string `json:"versionId"`
 }
