@@ -16,7 +16,7 @@
   version = "v1.11.1"
 
 [[projects]]
-  digest = "1:f464cdfa825fcb7ed822e2f51cb3b8dc3ef184bc20d0f1d1582e920be8738d4c"
+  digest = "1:2ecb47844b40fa35df57a4de707551809ec1c0d3887748285f9e398a926a5ada"
   name = "github.com/aws/aws-sdk-go"
   packages = [
     "aws",
@@ -48,6 +48,7 @@
     "private/protocol/query/queryutil",
     "private/protocol/rest",
     "private/protocol/xml/xmlutil",
+    "service/iam",
     "service/sqs",
     "service/sts",
     "service/sts/stsiface",
@@ -276,10 +277,10 @@
     "github.com/aws/aws-lambda-go/lambda",
     "github.com/aws/aws-sdk-go/aws",
     "github.com/aws/aws-sdk-go/aws/session",
+    "github.com/aws/aws-sdk-go/service/iam",
     "github.com/aws/aws-sdk-go/service/sqs",
     "github.com/joho/godotenv",
     "gopkg.in/src-d/go-git.v4",
-    "gopkg.in/src-d/go-git.v4/storage/memory",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1

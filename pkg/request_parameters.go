@@ -1,4 +1,4 @@
-package main
+package pkg
 
 type RequestParameters struct {
 	PolicyArn      string `json:"policyArn"`

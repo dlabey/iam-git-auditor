@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion : 2010-09-09
+Transform: AWS::Serverless-2016-10-31
+
+Description: An IAM Git auditor that log CloudTrail events related to IAM to Git.
+
+Resources:
+
+  Queue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: iam-audit
+      KmsMasterKeyId: alias/aws/sqs
+
+  Tailer:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: go1.x
+      Handler: tailer
+      Policies:
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt Queue.QueueName
+      Environment:
+        Variables:
+          QUEUE_URL: !Ref Queue
+
+  Auditor:
+    Type: AWS::Serverless::Function
+    Properties:
+      Runtime: go1.x
+      Handler: auditor
+      Policies:
+        - sqs:ReceiveMessage:
+            QueueName: !GetAtt Queue.QueueName
+        - sqs:DeleteMessage:
+            QueueName: !GetAtt Queue.QueueName
+        - sqs:GetQueueAttributes:
+            QueueName: !GetAtt Queue.QueueName
+
+  AuditorTrigger:
+    Type: AWS::Lambda::EventSourceMapping
+    Properties:
+      Enabled: true
+      EventSourceArn: !GetAtt Queue.Arn
+      FunctionName: !Ref Auditor

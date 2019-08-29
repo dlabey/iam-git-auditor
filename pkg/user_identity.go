@@ -1,4 +1,4 @@
-package main
+package pkg
 
 type UserIdentity struct {
 	Type     string `json:"type"`
