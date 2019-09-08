@@ -16,7 +16,7 @@
   version = "v1.13.1"
 
 [[projects]]
-  digest = "1:dfe1e59f900e97362ce98c9285999d8720e12aaed5468e655060f57a1eec4786"
+  digest = "1:053366cb01caa6f6f2d75ea5002935e51508939602d8a138c043e21e93fda05c"
   name = "github.com/aws/aws-sdk-go"
   packages = [
     "aws",
@@ -38,20 +38,26 @@
     "aws/session",
     "aws/signer/v4",
     "internal/ini",
+    "internal/s3err",
     "internal/sdkio",
     "internal/sdkmath",
     "internal/sdkrand",
     "internal/sdkuri",
     "internal/shareddefaults",
     "private/protocol",
+    "private/protocol/eventstream",
+    "private/protocol/eventstream/eventstreamapi",
     "private/protocol/json/jsonutil",
     "private/protocol/jsonrpc",
     "private/protocol/query",
     "private/protocol/query/queryutil",
     "private/protocol/rest",
+    "private/protocol/restxml",
     "private/protocol/xml/xmlutil",
     "service/iam",
     "service/iam/iamiface",
+    "service/s3",
+    "service/s3/s3iface",
     "service/secretsmanager",
     "service/sqs",
     "service/sqs/sqsiface",
@@ -311,6 +317,8 @@
     "github.com/aws/aws-sdk-go/aws/session",
     "github.com/aws/aws-sdk-go/service/iam",
     "github.com/aws/aws-sdk-go/service/iam/iamiface",
+    "github.com/aws/aws-sdk-go/service/s3",
+    "github.com/aws/aws-sdk-go/service/s3/s3iface",
     "github.com/aws/aws-sdk-go/service/secretsmanager",
     "github.com/aws/aws-sdk-go/service/sqs",
     "github.com/aws/aws-sdk-go/service/sqs/sqsiface",

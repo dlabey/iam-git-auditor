@@ -1,12 +1,16 @@
 package main
 
 import (
+	"bytes"
+	"compress/gzip"
 	"context"
 	"encoding/json"
 	"errors"
+	"github.com/aws/aws-lambda-go/events"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/dlabey/iam-git-auditor/pkg/cloudtrail"
 	"github.com/dlabey/iam-git-auditor/pkg/utils"
+	"io"
 	"log"
 	"os"
 	"sync"
@@ -14,6 +18,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/s3"
+	"github.com/aws/aws-sdk-go/service/s3/s3iface"
 	"github.com/aws/aws-sdk-go/service/sqs"
 	"github.com/aws/aws-sdk-go/service/sqs/sqsiface"
 )
@@ -24,13 +30,36 @@ type response struct {
 }
 
 // Tails CloudTrail events into an SQS queue for synchronous processing to Git.
-func Tailer(ctx context.Context, evt cloudtrail.CloudTrailEvents, sqsSvc sqsiface.SQSAPI) (*response, error) {
+func Tailer(ctx context.Context, s3Evt events.S3Event, s3Svc s3iface.S3API, sqsSvc sqsiface.SQSAPI) (*response, error) {
+	// Get the S3 compressed log object.
+	getObjectOutput, err := s3Svc.GetObject(&s3.GetObjectInput{
+		Bucket: aws.String(s3Evt.Records[0].S3.Bucket.Name),
+		Key:    aws.String(s3Evt.Records[0].S3.Object.Key),
+	})
+	utils.CheckError(err, "msg=\"Error getting S3 object\" err=\"%s\"")
+	var buf bytes.Buffer
+	_, err = buf.ReadFrom(getObjectOutput.Body)
+	utils.CheckError(err, "msg=\"Error buffering S3 object\" err=\"%s\"")
+
+	// Uncompress the log object.
+	reader, err := gzip.NewReader(&buf)
+	utils.CheckError(err, "msg=\"Error reading S3 object compressed buffer bytes\" err=\"%s\"")
+	writer := new(bytes.Buffer)
+	_, err = io.Copy(writer, reader)
+	utils.CheckError(err, "msg=\"Error reading S3 object uncompressed buffer bytes\" err=\"%s\"")
+	err = reader.Close()
+	utils.CheckError(err, "msg=\"Error closing the S3 object uncompressed reader\" err=\"%s\"")
+
+	// Unmarshal the CloudTrail events.
+	var cloudTrailEvt cloudtrail.CloudTrailEvents
+	err = json.Unmarshal(writer.Bytes(), &cloudTrailEvt)
+	utils.CheckError(err, "msg=\"Error unmarshalling CloudTrail events\" err=\"%s\"")
 
 	// Partition the CloudTrail event records into partitions of up to 10.
-	records := evt.Records
+	records := cloudTrailEvt.Records
 	partitionSize := 10
 	var partitions [][]cloudtrail.CloudTrailEvent
-	for partitionSize < len(evt.Records) {
+	for partitionSize < len(cloudTrailEvt.Records) {
 		records, partitions = records[partitionSize:], append(partitions, records[0:partitionSize:partitionSize])
 	}
 	partitions = append(partitions, records)
@@ -65,7 +94,7 @@ func Tailer(ctx context.Context, evt cloudtrail.CloudTrailEvents, sqsSvc sqsifac
 
 			// Send the message to the SQS queue to be processed synchronously for Git.
 			queueUrl := os.Getenv("QUEUE_URL")
-			res, err := sqsSvc.SendMessageBatch(&sqs.SendMessageBatchInput{
+			sendMessageBatchOutput, err := sqsSvc.SendMessageBatch(&sqs.SendMessageBatchInput{
 				Entries:  entries,
 				QueueUrl: aws.String(queueUrl),
 			})
@@ -73,8 +102,8 @@ func Tailer(ctx context.Context, evt cloudtrail.CloudTrailEvents, sqsSvc sqsifac
 			log.Printf("msg=\"Sent message batch to SQS\" entriesLen=%d", len(entries))
 
 			// Evaluate the response.
-			atomic.AddInt32(&successful, int32(len(res.Successful)))
-			atomic.AddInt32(&failed, int32(len(res.Failed)))
+			atomic.AddInt32(&successful, int32(len(sendMessageBatchOutput.Successful)))
+			atomic.AddInt32(&failed, int32(len(sendMessageBatchOutput.Failed)))
 		}(i)
 	}
 	waitGroup.Wait()
@@ -86,7 +115,6 @@ func Tailer(ctx context.Context, evt cloudtrail.CloudTrailEvents, sqsSvc sqsifac
 	}
 
 	// If there is an error, use the result JSON as the error message.
-	var err error
 	if failed > 0 {
 		errJson, err := json.Marshal(response)
 		utils.CheckError(err, "msg=\"Error marshalling result\" err=\"%s\"")
@@ -98,14 +126,17 @@ func Tailer(ctx context.Context, evt cloudtrail.CloudTrailEvents, sqsSvc sqsifac
 	return response, err
 }
 
-func handler(ctx context.Context, evt cloudtrail.CloudTrailEvents) (*response, error) {
+func handler(ctx context.Context, s3Evt events.S3Event) (*response, error) {
 	// Initialize an AWS session.
 	sess := session.Must(session.NewSession())
+
+	// Initialize the S3 service.
+	s3Svc := s3.New(sess)
 
 	// Initialize the SQS service.
 	sqsSvc := sqs.New(sess)
 
-	return Tailer(ctx, evt, sqsSvc)
+	return Tailer(ctx, s3Evt, s3Svc, sqsSvc)
 }
 
 func main() {
