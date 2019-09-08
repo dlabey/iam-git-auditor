@@ -22,9 +22,9 @@ Resources:
             BucketName: iam-git-auditor
         - SQSSendMessagePolicy:
             QueueName: !GetAtt Queue.QueueName
-    Environment:
-      Variables:
-        QUEUE_URL: !Ref Queue
+      Environment:
+        Variables:
+          QUEUE_URL: !Ref Queue
 
   TailerNotifier:
     Type: AWS::Lambda::Permission
@@ -44,6 +44,10 @@ Resources:
       Policies:
         - SQSPollerPolicy:
             QueueName: !GetAtt Queue.QueueName
+      Environment:
+        Variables:
+          AWS_SECRETS_MANAGER_SECRET_NAME: IamGitAuditor
+          GIT_REPO: https://github.com/dlabey/test.git
 
   AuditorTrigger:
     Type: AWS::Lambda::EventSourceMapping
