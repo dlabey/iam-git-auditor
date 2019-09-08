@@ -19,6 +19,8 @@ Resources:
       CodeUri: s3://iam-git-auditor/tailer.zip
       Handler: tailer
       Policies:
+        - S3ReadPolicy:
+            BucketName: iam-git-auditor
         - SQSSendMessagePolicy:
             QueueName: !GetAtt Queue.QueueName
     Environment:
