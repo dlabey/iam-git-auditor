@@ -1,4 +1,4 @@
-package pkg
+package cloudtrail
 
 type CloudTrailEvent struct {
 	ErrorCode         string            `json:"errorCode"`

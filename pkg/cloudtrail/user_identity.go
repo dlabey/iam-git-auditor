@@ -1,4 +1,4 @@
-package pkg
+package cloudtrail
 
 type UserIdentity struct {
 	Type     string `json:"type"`

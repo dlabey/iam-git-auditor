@@ -1,4 +1,4 @@
-package pkg
+package cloudtrail
 
 type RequestParameters struct {
 	PolicyArn      string `json:"policyArn"`
