@@ -25,6 +25,14 @@ Resources:
       Variables:
         QUEUE_URL: !Ref Queue
 
+  TailerNotifier:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref Tailer
+      Principal: s3.amazonaws.com
+      SourceArn: arn:aws:s3:::iam-git-auditor
+
   Auditor:
     Type: AWS::Serverless::Function
     Properties:
