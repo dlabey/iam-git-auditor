@@ -4,10 +4,10 @@ import (
 	"context"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/dlabey/iam-git-auditor/pkg/cloudtrail"
 	"github.com/dlabey/iam-git-auditor/pkg/utils"
+	"log"
 	"os"
 	"sync"
 	"sync/atomic"
@@ -37,12 +37,15 @@ func Tailer(ctx context.Context, evt cloudtrail.CloudTrailEvents, sqsSvc sqsifac
 
 	// Concurrently go over each partition and batch it to the SQS queue.
 	partitionsLen := len(partitions)
+	log.Printf("msg=\"Processesing partitions\" partitionsLen=%d", partitionsLen)
 	var waitGroup sync.WaitGroup
 	waitGroup.Add(partitionsLen)
 	var successful int32
 	var failed int32
 	for i := 0; i < len(partitions); i++ {
 		go func(i int) {
+			log.Printf("msg=\"Processesing partition\" partitionIdx=%d", i)
+
 			// Close the channel when complete.
 			defer waitGroup.Done()
 
@@ -52,7 +55,7 @@ func Tailer(ctx context.Context, evt cloudtrail.CloudTrailEvents, sqsSvc sqsifac
 			// Go over each partition and prepare it for the request.
 			for j := 0; j < len(partitions[i]); j++ {
 				messageBody, err := json.Marshal(partitions[i][j])
-				utils.CheckError(err, fmt.Sprintf("Error marshalling CloudTrailEvent: %s", err))
+				utils.CheckError(err, "msg=\"Error marshalling CloudTrailEvent\" err=\"%s\"")
 				entries[j] = &sqs.SendMessageBatchRequestEntry{
 					DelaySeconds: aws.Int64(10),
 					Id:           aws.String(partitions[i][j].EventID),
@@ -66,7 +69,8 @@ func Tailer(ctx context.Context, evt cloudtrail.CloudTrailEvents, sqsSvc sqsifac
 				Entries:  entries,
 				QueueUrl: aws.String(queueUrl),
 			})
-			utils.CheckError(err, fmt.Sprintf("Error sending SQS message: %s", err))
+			utils.CheckError(err, "msg=\"Error sending SQS message\" err=\"%s\"")
+			log.Printf("msg=\"Sent message batch to SQS\" entriesLen=%d", len(entries))
 
 			// Evaluate the response.
 			atomic.AddInt32(&successful, int32(len(res.Successful)))
@@ -76,7 +80,7 @@ func Tailer(ctx context.Context, evt cloudtrail.CloudTrailEvents, sqsSvc sqsifac
 	waitGroup.Wait()
 
 	// Initialize the result.
-	result := &response{
+	response := &response{
 		Successful: successful,
 		Failed:     failed,
 	}
@@ -84,12 +88,14 @@ func Tailer(ctx context.Context, evt cloudtrail.CloudTrailEvents, sqsSvc sqsifac
 	// If there is an error, use the result JSON as the error message.
 	var err error
 	if failed > 0 {
-		errJson, err := json.Marshal(result)
-		utils.CheckError(err, fmt.Sprintf("Error marshalling result: %s", err))
+		errJson, err := json.Marshal(response)
+		utils.CheckError(err, "msg=\"Error marshalling result\" err=\"%s\"")
 		err = errors.New(string(errJson))
 	}
 
-	return result, err
+	log.Printf("msg=\"Response\" successful=%d failed=%d", response.Successful, response.Failed)
+
+	return response, err
 }
 
 func handler(ctx context.Context, evt cloudtrail.CloudTrailEvents) (*response, error) {
