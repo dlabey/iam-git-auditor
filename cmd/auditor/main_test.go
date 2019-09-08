@@ -11,6 +11,7 @@ import (
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
+	"gopkg.in/src-d/go-git.v4/plumbing/transport/http"
 	"testing"
 )
 
@@ -101,6 +102,7 @@ func TestAuditor(t *testing.T) {
 			Body: string(cloudTrailEvt3Json),
 		}},
 	}
+	gitAuth := &http.BasicAuth{}
 	gitRepoMock := new(MockGitRepo)
 	gitWorktreeMock := new(MockGitWorktree)
 	iamSvcMock := new(MockIamSvc)
@@ -116,7 +118,7 @@ func TestAuditor(t *testing.T) {
 	iamSvcMock.On("GetPolicyVersion", mock.AnythingOfType("*iam.GetPolicyVersionInput")).Return(
 		&iam.GetPolicyVersionOutput{}, nil)
 
-	response, err := Auditor(*ctx, sqsEvt, gitRepoMock, gitWorktreeMock, iamSvcMock)
+	response, err := Auditor(*ctx, sqsEvt, gitAuth, gitRepoMock, gitWorktreeMock, iamSvcMock)
 	assert.Nil(t, err)
 	assert.Equal(t, 1, response.Added)
 	assert.Equal(t, 1, response.Removed)

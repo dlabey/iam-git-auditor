@@ -8,7 +8,6 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/dlabey/iam-git-auditor/pkg/cloudtrail"
 	"github.com/dlabey/iam-git-auditor/pkg/utils"
-	"github.com/joho/godotenv"
 	"os"
 	"sync"
 	"sync/atomic"
@@ -94,12 +93,10 @@ func Tailer(ctx context.Context, evt cloudtrail.CloudTrailEvents, sqsSvc sqsifac
 }
 
 func handler(ctx context.Context, evt cloudtrail.CloudTrailEvents) (*response, error) {
-	// Initialize dotenv.
-	err := godotenv.Load()
-	utils.CheckError(err, fmt.Sprintf("Error loading .env file: %s", err))
+	// Initialize an AWS session.
+	sess := session.Must(session.NewSession())
 
 	// Initialize the SQS service.
-	sess, err := session.NewSession(&aws.Config{})
 	sqsSvc := sqs.New(sess)
 
 	return Tailer(ctx, evt, sqsSvc)

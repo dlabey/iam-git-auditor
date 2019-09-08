@@ -10,11 +10,12 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/iam/iamiface"
+	"github.com/aws/aws-sdk-go/service/secretsmanager"
 	"github.com/dlabey/iam-git-auditor/pkg/cloudtrail"
 	"github.com/dlabey/iam-git-auditor/pkg/utils"
-	"github.com/joho/godotenv"
 	"gopkg.in/src-d/go-git.v4"
 	"gopkg.in/src-d/go-git.v4/plumbing/object"
+	"gopkg.in/src-d/go-git.v4/plumbing/transport"
 	"gopkg.in/src-d/go-git.v4/plumbing/transport/http"
 	"log"
 	"os"
@@ -35,8 +36,8 @@ func parsePolicyName(policyArn string) string {
 }
 
 // Audits the intended records in sequence for each to be a single Git commit for the right datetime.
-func Auditor(ctx context.Context, evt events.SQSEvent, gitRepo Repository, gitWorktree Worktree,
-	iamSvc iamiface.IAMAPI) (*Response, error) {
+func Auditor(ctx context.Context, evt events.SQSEvent, gitAuth transport.AuthMethod, gitRepo Repository,
+	gitWorktree Worktree, iamSvc iamiface.IAMAPI) (*Response, error) {
 	// Assign common constants.
 	const AttachedPoliciesDirName = "attachedPolicies"
 	const PoliciesDirName = "policies"
@@ -181,10 +182,7 @@ func Auditor(ctx context.Context, evt events.SQSEvent, gitRepo Repository, gitWo
 
 	// Push all the changes to the remote Git repo.
 	err := gitRepo.Push(&git.PushOptions{
-		Auth: &http.BasicAuth{
-			Username: "token",
-			Password: os.Getenv("GITHUB_TOKEN"),
-		},
+		Auth:     gitAuth,
 		Progress: os.Stdout,
 	})
 
@@ -192,17 +190,34 @@ func Auditor(ctx context.Context, evt events.SQSEvent, gitRepo Repository, gitWo
 }
 
 func handler(ctx context.Context, evt events.SQSEvent) (*Response, error) {
-	// Initialize dotenv.
-	err := godotenv.Load()
-	utils.CheckError(err, fmt.Sprintf("Error loading .env file: %s", err))
+	// Initialize an AWS session.
+	sess := session.Must(session.NewSession())
+
+	// Initialize the Secrets Manager service.
+	secretsManagerSvc := secretsmanager.New(sess)
+
+	// Get the Git repo username.
+	gitUsername := os.Getenv("GIT_USERNAME")
+	if gitUsername == "" {
+		gitUsername = "token"
+	}
+
+	// Get the Git repo password or token.
+	gitPasswordTokenSecretValue, err := secretsManagerSvc.GetSecretValue(&secretsmanager.GetSecretValueInput{
+		SecretId: aws.String(os.Getenv("GitPasswordToken")),
+	})
+	utils.CheckError(err, fmt.Sprintf("Error getting Git password token from Secrets Manager: %s", err))
+
+	// Initialize the Git auth.
+	gitAuth := &http.BasicAuth{
+		Username: gitUsername,
+		Password: gitPasswordTokenSecretValue.GoString(),
+	}
 
 	// Checkout the audit repo.
 	gitRepoUrl := os.Getenv("GIT_REPO")
 	_, err = git.PlainClone(os.TempDir(), false, &git.CloneOptions{
-		Auth: &http.BasicAuth{
-			Username: "token",
-			Password: os.Getenv("GITHUB_TOKEN"),
-		},
+		Auth:     gitAuth,
 		URL:      gitRepoUrl,
 		Progress: os.Stdout,
 	})
@@ -218,10 +233,9 @@ func handler(ctx context.Context, evt events.SQSEvent) (*Response, error) {
 	utils.CheckError(err, fmt.Sprintf("Error getting Git repo work tree: %s", err))
 
 	// Initialize the IAM service.
-	sess := session.Must(session.NewSession())
 	iamSvc := iam.New(sess)
 
-	return Auditor(ctx, evt, gitRepo, gitWorkTree, iamSvc)
+	return Auditor(ctx, evt, gitAuth, gitRepo, gitWorkTree, iamSvc)
 }
 
 func main() {

@@ -2,7 +2,7 @@
 
 
 [[projects]]
-  digest = "1:98d2b07cc619145bc24a43233452ba3f7e576c4e94cb2e49aca067a3ae23121e"
+  digest = "1:6db3c13856430e0b9d16f74955c08eeda92c37bb2f1ae7ee99d60d4b34353e2b"
   name = "github.com/aws/aws-lambda-go"
   packages = [
     "events",
@@ -12,11 +12,11 @@
     "lambdacontext",
   ]
   pruneopts = "UT"
-  revision = "4c210d7623089d36b6bb6febf5a5e553bf73fbfb"
-  version = "v1.11.1"
+  revision = "fe4f484f034626157ca7deb2ddb418ffac99a9a6"
+  version = "v1.13.1"
 
 [[projects]]
-  digest = "1:7ab5330a9ff954342f66e109bbebbda4219fa08d4199ea388431e3d7f30acbe5"
+  digest = "1:dfe1e59f900e97362ce98c9285999d8720e12aaed5468e655060f57a1eec4786"
   name = "github.com/aws/aws-sdk-go"
   packages = [
     "aws",
@@ -39,25 +39,28 @@
     "aws/signer/v4",
     "internal/ini",
     "internal/sdkio",
+    "internal/sdkmath",
     "internal/sdkrand",
     "internal/sdkuri",
     "internal/shareddefaults",
     "private/protocol",
     "private/protocol/json/jsonutil",
+    "private/protocol/jsonrpc",
     "private/protocol/query",
     "private/protocol/query/queryutil",
     "private/protocol/rest",
     "private/protocol/xml/xmlutil",
     "service/iam",
     "service/iam/iamiface",
+    "service/secretsmanager",
     "service/sqs",
     "service/sqs/sqsiface",
     "service/sts",
     "service/sts/stsiface",
   ]
   pruneopts = "UT"
-  revision = "782e25af382e14e671fafa168293c52f24fc1992"
-  version = "v1.23.4"
+  revision = "cf5210b77b6f9d40c4c34a0bc793f3bdbe4bc877"
+  version = "v1.23.17"
 
 [[projects]]
   digest = "1:ffe9824d294da03b391f44e1ae8281281b4afc1bdaa9588c9097785e3af10cec"
@@ -98,20 +101,12 @@
   revision = "c2b33e84"
 
 [[projects]]
-  digest = "1:ecd9aa82687cf31d1585d4ac61d0ba180e42e8a6182b85bd785fcca8dfeefc1b"
-  name = "github.com/joho/godotenv"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "23d116af351c84513e1946b527c88823e476be13"
-  version = "v1.3.0"
-
-[[projects]]
-  digest = "1:ae5f4d0779a45e2cb3075d8b3ece6c623e171407f4aac83521392ff06d188871"
+  digest = "1:fd7f169f32c221b096c74e756bda16fe22d3bb448bbf74042fd0700407a1f92f"
   name = "github.com/kevinburke/ssh_config"
   packages = ["."]
   pruneopts = "UT"
-  revision = "81db2a75821ed34e682567d48be488a1c3121088"
-  version = "0.5"
+  revision = "6cfae18c12b8934b1afba3ce8159476fdef666ba"
+  version = "1.0"
 
 [[projects]]
   digest = "1:5d231480e1c64a726869bc4142d270184c419749d34f167646baa21008eb0a79"
@@ -120,14 +115,6 @@
   pruneopts = "UT"
   revision = "af06845cf3004701891bf4fdb884bfe4920b3727"
   version = "v1.1.0"
-
-[[projects]]
-  digest = "1:b2ee62e09bec113cf086d2ce0769efcc7bf79481aba8373fd8f7884e94df3462"
-  name = "github.com/pelletier/go-buffruneio"
-  packages = ["."]
-  pruneopts = "UT"
-  revision = "c37440a7cf42ac63b919c752ca73a85067e05992"
-  version = "v0.2.0"
 
 [[projects]]
   digest = "1:0028cb19b2e4c3112225cd871870f2d9cf49b9b4276531f03438a88e94be86fe"
@@ -208,7 +195,7 @@
     "ssh/knownhosts",
   ]
   pruneopts = "UT"
-  revision = "4def268fd1a49955bfb3dda92fe3db4f924f2285"
+  revision = "71b5226ff73902d121cd9dbbdfdb67045a805845"
 
 [[projects]]
   branch = "master"
@@ -220,11 +207,11 @@
     "proxy",
   ]
   pruneopts = "UT"
-  revision = "ca1201d0de80cfde86cb01aea620983605dfe99b"
+  revision = "ba9fcec4b297b415637633c5a6e8fa592e4a16c3"
 
 [[projects]]
   branch = "master"
-  digest = "1:34a0c43f2d706c6292cd418409b68ae23657c8a5e960ab97bc199972d4e86d0c"
+  digest = "1:5a02d330012e8211f495231279367d95cf02abd7b0bed380db1e342dd3a5ffd6"
   name = "golang.org/x/sys"
   packages = [
     "cpu",
@@ -232,10 +219,10 @@
     "windows",
   ]
   pruneopts = "UT"
-  revision = "fae7ac547cb717d141c433a2a173315e216b64c4"
+  revision = "d223b2b6db03988709bac9e66576ad6ec0d83695"
 
 [[projects]]
-  digest = "1:8721691b59945f5f21cb170066a62340fe7fc900986355b4ce31d41ab86ca503"
+  digest = "1:eb27cfcaf8d7e4155224dd0a209f1d0ab19784fef01be142638b78b7b6becd6b"
   name = "gopkg.in/src-d/go-billy.v4"
   packages = [
     ".",
@@ -245,11 +232,11 @@
     "util",
   ]
   pruneopts = "UT"
-  revision = "711f3aa5b30ce9bbc7d708792ca98b913cbbd4a5"
-  version = "v4.3.1"
+  revision = "780403cfc1bc95ff4d07e7b26db40a6186c5326e"
+  version = "v4.3.2"
 
 [[projects]]
-  digest = "1:ca7d1685b495a8037bd2532eb84231b7fc5649de546cf878e1a32f44a3d5234f"
+  digest = "1:b2ad0a18676cd4d5b4b180709c1ea34dbabd74b3d7db0cc01e6d287d5f1e3a99"
   name = "gopkg.in/src-d/go-git.v4"
   packages = [
     ".",
@@ -295,8 +282,8 @@
     "utils/merkletrie/noder",
   ]
   pruneopts = "UT"
-  revision = "f9a30199e7083bdda8adad3a4fa2ec42d25c1fdb"
-  version = "v4.12.0"
+  revision = "0d1a009cbb604db18be960db5f1525b99a55d727"
+  version = "v4.13.1"
 
 [[projects]]
   digest = "1:78d374b493e747afa9fbb2119687e3740a7fb8d0ebabddfef0a012593aaecbb3"
@@ -324,14 +311,16 @@
     "github.com/aws/aws-sdk-go/aws/session",
     "github.com/aws/aws-sdk-go/service/iam",
     "github.com/aws/aws-sdk-go/service/iam/iamiface",
+    "github.com/aws/aws-sdk-go/service/secretsmanager",
     "github.com/aws/aws-sdk-go/service/sqs",
     "github.com/aws/aws-sdk-go/service/sqs/sqsiface",
-    "github.com/joho/godotenv",
     "github.com/stretchr/testify/assert",
     "github.com/stretchr/testify/mock",
     "gopkg.in/src-d/go-git.v4",
     "gopkg.in/src-d/go-git.v4/plumbing",
     "gopkg.in/src-d/go-git.v4/plumbing/object",
+    "gopkg.in/src-d/go-git.v4/plumbing/transport",
+    "gopkg.in/src-d/go-git.v4/plumbing/transport/http",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
