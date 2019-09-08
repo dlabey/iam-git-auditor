@@ -22,10 +22,14 @@ import (
 	"time"
 )
 
-type Response struct {
+type response struct {
 	Added   int
 	Removed int
 	Ignored int
+}
+
+type token struct {
+	Token string `json:"token"`
 }
 
 func parsePolicyName(policyArn string) string {
@@ -36,14 +40,14 @@ func parsePolicyName(policyArn string) string {
 
 // Audits the intended records in sequence for each to be a single Git commit for the right datetime.
 func Auditor(ctx context.Context, evt events.SQSEvent, gitAuth transport.AuthMethod, gitRepo Repository,
-	gitWorktree Worktree, iamSvc iamiface.IAMAPI) (*Response, error) {
+	gitWorktree Worktree, iamSvc iamiface.IAMAPI) (*response, error) {
 	// Assign common constants.
 	const AttachedPoliciesDirName = "attachedPolicies"
 	const PoliciesDirName = "policies"
 	const RolesDirName = "roles"
 
 	// Instantiate the response.
-	response := &Response{}
+	response := &response{}
 
 	// Handle the event and commit it to the Git work tree.
 	for i := 0; i < len(evt.Records); i++ {
@@ -186,7 +190,7 @@ func Auditor(ctx context.Context, evt events.SQSEvent, gitAuth transport.AuthMet
 			commitLog, err := gitRepo.CommitObject(commit)
 			utils.CheckError(err, "msg=\"Error committing to Git work tree\" err=\"%s\"")
 			log.Printf("msg=\"Git Commit\" commit=\"%s\"",
-				strings.Replace(commitLog.String(), "\"", "\\\"", -1))
+				strings.TrimSpace(strings.Replace(commitLog.String(), "\"", "\\\"", -1)))
 		}
 	}
 
@@ -197,13 +201,13 @@ func Auditor(ctx context.Context, evt events.SQSEvent, gitAuth transport.AuthMet
 		Progress: os.Stdout,
 	})
 
-	log.Printf("msg=\"Response\" added=%d removed=%d ignored=%d", response.Added, response.Removed,
+	log.Printf("msg=\"response\" added=%d removed=%d ignored=%d", response.Added, response.Removed,
 		response.Ignored)
 
 	return response, err
 }
 
-func handler(ctx context.Context, evt events.SQSEvent) (*Response, error) {
+func handler(ctx context.Context, evt events.SQSEvent) (*response, error) {
 	// Initialize an AWS session.
 	sess := session.Must(session.NewSession())
 
@@ -217,15 +221,18 @@ func handler(ctx context.Context, evt events.SQSEvent) (*Response, error) {
 	}
 
 	// Get the Git repo password or token.
-	gitPasswordTokenSecretValue, err := secretsManagerSvc.GetSecretValue(&secretsmanager.GetSecretValueInput{
-		SecretId: aws.String(os.Getenv("GitPasswordToken")),
+	secretsManagerSecretValue, err := secretsManagerSvc.GetSecretValue(&secretsmanager.GetSecretValueInput{
+		SecretId: aws.String(os.Getenv("AWS_SECRETS_MANAGER_SECRET_NAME")),
 	})
 	utils.CheckError(err, "msg=\"Error getting Git password token from Secrets Manager\" err=\"%s\"")
+	var token token
+	err = json.Unmarshal([]byte(secretsManagerSecretValue.String()), token)
+	utils.CheckError(err, "msg=\"Error unmarshalling Git password token from Secrets Manager\" err=\"%s\"")
 
 	// Initialize the Git auth.
 	gitAuth := &http.BasicAuth{
 		Username: gitUsername,
-		Password: gitPasswordTokenSecretValue.GoString(),
+		Password: token.Token,
 	}
 
 	// Checkout the audit repo.

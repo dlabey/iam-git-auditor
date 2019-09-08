@@ -11,34 +11,34 @@ Resources:
       QueueName: iam-audit
       KmsMasterKeyId: alias/aws/sqs
 
+
   Tailer:
     Type: AWS::Serverless::Function
     Properties:
       Runtime: go1.x
+      CodeUri: s3://iam-git-auditor/tailer.zip
       Handler: tailer
       Policies:
         - SQSSendMessagePolicy:
             QueueName: !GetAtt Queue.QueueName
-      Environment:
-        Variables:
-          QUEUE_URL: !Ref Queue
+    Environment:
+      Variables:
+        QUEUE_URL: !Ref Queue
 
   Auditor:
     Type: AWS::Serverless::Function
     Properties:
       Runtime: go1.x
+      CodeUri: s3://iam-git-auditor/auditor.zip
       Handler: auditor
+      ReservedConcurrentExecutions: 1
       Policies:
-        - sqs:ReceiveMessage:
-            QueueName: !GetAtt Queue.QueueName
-        - sqs:DeleteMessage:
-            QueueName: !GetAtt Queue.QueueName
-        - sqs:GetQueueAttributes:
+        - SQSPollerPolicy:
             QueueName: !GetAtt Queue.QueueName
 
   AuditorTrigger:
     Type: AWS::Lambda::EventSourceMapping
     Properties:
-      Enabled: true
+      Enabled: false
       EventSourceArn: !GetAtt Queue.Arn
       FunctionName: !Ref Auditor
