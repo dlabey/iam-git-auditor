@@ -1,9 +1,9 @@
 package cloudtrail
 
 type RequestParameters struct {
-	PolicyArn      string `json:"policyArn"`
-	PolicyDocument string `json:"policyDocument"`
-	PolicyName     string `json:"policyName"`
-	RoleName       string `json:"roleName"`
-	VersionId      string `json:"versionId"`
+	PolicyArn      string `json:"policyArn,omitempty"`
+	PolicyDocument string `json:"policyDocument,omitempty"`
+	PolicyName     string `json:"policyName,omitempty"`
+	RoleName       string `json:"roleName,omitempty"`
+	VersionId      string `json:"versionId,omitempty"`
 }

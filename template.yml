@@ -19,7 +19,7 @@ Resources:
       Handler: tailer
       Policies:
         - S3ReadPolicy:
-            BucketName: iam-git-auditor
+            BucketName: cloudtrail-907251231013
         - SQSSendMessagePolicy:
             QueueName: !GetAtt Queue.QueueName
       Environment:

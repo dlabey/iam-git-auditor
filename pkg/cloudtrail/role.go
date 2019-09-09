@@ -1,5 +1,5 @@
 package cloudtrail
 
 type Role struct {
-	RoleName string `json:"roleName"`
+	RoleName string `json:"roleName,omitempty"`
 }
