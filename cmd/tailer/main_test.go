@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"compress/gzip"
 	"context"
 	"encoding/json"
 	"github.com/aws/aws-lambda-go/events"
@@ -85,11 +84,7 @@ func TestTailer(t *testing.T) {
 	}
 
 	cloudTrailEvtsJson, _ := json.Marshal(cloudTrailEvts)
-	var blob bytes.Buffer
-	writer := gzip.NewWriter(&blob)
-	_, err := writer.Write(cloudTrailEvtsJson)
-	body := ioutil.NopCloser(&blob)
-	writer.Close()
+	body := ioutil.NopCloser(bytes.NewBuffer(cloudTrailEvtsJson))
 
 	s3SvcMock := new(MockS3Svc)
 	s3SvcMock.On("GetObject", mock.AnythingOfType("*s3.GetObjectInput")).Return(

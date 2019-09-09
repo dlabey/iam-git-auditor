@@ -2,7 +2,6 @@ package main
 
 import (
 	"bytes"
-	"compress/gzip"
 	"context"
 	"encoding/json"
 	"errors"
@@ -10,7 +9,6 @@ import (
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/dlabey/iam-git-auditor/pkg/cloudtrail"
 	"github.com/dlabey/iam-git-auditor/pkg/utils"
-	"io"
 	"log"
 	"os"
 	"sync"
@@ -41,18 +39,9 @@ func Tailer(ctx context.Context, s3Evt events.S3Event, s3Svc s3iface.S3API, sqsS
 	_, err = buf.ReadFrom(getObjectOutput.Body)
 	utils.CheckError(err, "msg=\"Error buffering S3 object\" err=\"%s\"")
 
-	// Uncompress the log object.
-	reader, err := gzip.NewReader(&buf)
-	utils.CheckError(err, "msg=\"Error reading S3 object compressed buffer bytes\" err=\"%s\"")
-	writer := new(bytes.Buffer)
-	_, err = io.Copy(writer, reader)
-	utils.CheckError(err, "msg=\"Error reading S3 object uncompressed buffer bytes\" err=\"%s\"")
-	err = reader.Close()
-	utils.CheckError(err, "msg=\"Error closing the S3 object uncompressed reader\" err=\"%s\"")
-
 	// Unmarshal the CloudTrail events.
 	var cloudTrailEvt cloudtrail.CloudTrailEvents
-	err = json.Unmarshal(writer.Bytes(), &cloudTrailEvt)
+	err = json.Unmarshal(buf.Bytes(), &cloudTrailEvt)
 	utils.CheckError(err, "msg=\"Error unmarshalling CloudTrail events\" err=\"%s\"")
 
 	// Partition the CloudTrail event records into partitions of up to 10.
