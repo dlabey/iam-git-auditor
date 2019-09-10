@@ -99,15 +99,27 @@ func Auditor(ctx context.Context, evt events.SQSEvent, gitAuth transport.AuthMet
 			response.Added++
 		case "CreateRole":
 			roleDir := os.TempDir() + "/" + RolesDirName + "/" + cloudTrailEvt.RequestParameters.RoleName
-			err = os.Mkdir(roleDir, os.ModeDir)
-			utils.CheckError(err, "msg=\"Error creating role directory\" err=\"%s\"")
+			if _, err := os.Stat(roleDir); os.IsNotExist(err) {
+				err = os.Mkdir(roleDir, 0744)
+				utils.CheckError(err, "msg=\"Error creating role directory\" err=\"%s\"")
+			}
 			inlinePolicyFile := roleDir + "/" + cloudTrailEvt.RequestParameters.RoleName
 			_, err = os.Create(inlinePolicyFile)
 			utils.CheckError(err, "msg=\"Error creating inline policy file\" err=\"%s\"")
-			_, err = gitWorktree.Add(inlinePolicyFile)
-			utils.CheckError(err, "msg=\"Error adding inline policy file to Git work tree\" err=\"%s\"")
-			log.Printf("msg=\"Git Add\" file=\"%s\"", inlinePolicyFile)
-			response.Added++
+			status, err := gitWorktree.Status()
+			utils.CheckError(err, "msg=\"Error getting Git work tree status\" err=\"%s\"")
+			log.Printf("msg=\"Git Status\" status=\"%s\"", status)
+			if status.String() == "" {
+				validEvent = false
+				response.Ignored++
+			} else {
+				inlinePolicyAdd := RolesDirName + "/" + cloudTrailEvt.RequestParameters.RoleName + "/" +
+					cloudTrailEvt.RequestParameters.RoleName
+				_, err = gitWorktree.Add(inlinePolicyAdd)
+				utils.CheckError(err, "msg=\"Error adding inline policy file to Git work tree\" err=\"%s\"")
+				log.Printf("msg=\"Git Add\" file=\"%s\"", inlinePolicyFile)
+				response.Added++
+			}
 		case "DeletePolicy":
 			policyName := parsePolicyName(cloudTrailEvt.RequestParameters.PolicyArn)
 			utils.CheckError(err, "msg=\"Error parsing policy arn\" err=\"%s\"")
@@ -182,7 +194,7 @@ func Auditor(ctx context.Context, evt events.SQSEvent, gitAuth transport.AuthMet
 			commit, err := gitWorktree.Commit(eventName+" by "+cloudTrailEvt.UserIdentity.UserName, &git.CommitOptions{
 				Author: &object.Signature{
 					Name:  cloudTrailEvt.UserIdentity.UserName,
-					Email: "<>",
+					Email: "noreply@nowhere.com",
 					When:  when,
 				},
 			})
@@ -200,6 +212,9 @@ func Auditor(ctx context.Context, evt events.SQSEvent, gitAuth transport.AuthMet
 		Auth:     gitAuth,
 		Progress: os.Stdout,
 	})
+	if err != nil && err == git.NoErrAlreadyUpToDate {
+		err = nil
+	}
 
 	log.Printf("msg=\"response\" added=%d removed=%d ignored=%d", response.Added, response.Removed,
 		response.Ignored)
@@ -226,7 +241,7 @@ func handler(ctx context.Context, evt events.SQSEvent) (*response, error) {
 	})
 	utils.CheckError(err, "msg=\"Error getting Git password token from Secrets Manager\" err=\"%s\"")
 	var token token
-	err = json.Unmarshal([]byte(secretsManagerSecretValue.String()), token)
+	err = json.Unmarshal([]byte(*secretsManagerSecretValue.SecretString), &token)
 	utils.CheckError(err, "msg=\"Error unmarshalling Git password token from Secrets Manager\" err=\"%s\"")
 
 	// Initialize the Git auth.
@@ -242,10 +257,11 @@ func handler(ctx context.Context, evt events.SQSEvent) (*response, error) {
 		URL:      gitRepoUrl,
 		Progress: os.Stdout,
 	})
-	utils.CheckError(err, "msg=\"Error cloning Git repo\" err=\"%s\"")
+	if err != nil && err != git.ErrRepositoryAlreadyExists {
+		utils.CheckError(err, "msg=\"Error cloning Git repo\" err=\"%s\"")
+	}
 
 	// Initialize the Git repo.
-	utils.CheckError(err, "msg=\"Error cloning Git repo\" err=\"%s\"")
 	gitRepo, err := git.PlainOpen(os.TempDir())
 	utils.CheckError(err, "msg=\"Error initializing Git repo\" err=\"%s\"")
 

@@ -44,6 +44,8 @@ Resources:
       Policies:
         - SQSPollerPolicy:
             QueueName: !GetAtt Queue.QueueName
+        - AWSSecretsManagerGetSecretValuePolicy:
+            SecretArn: arn:aws:secretsmanager:us-west-2:907251231013:secret:IamGitAuditor-FjALBF
       Environment:
         Variables:
           AWS_SECRETS_MANAGER_SECRET_NAME: IamGitAuditor

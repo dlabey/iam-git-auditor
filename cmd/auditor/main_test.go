@@ -54,6 +54,12 @@ func (m *MockGitWorktree) Remove(path string) (plumbing.Hash, error) {
 	return args.Get(0).(plumbing.Hash), args.Error(1)
 }
 
+func (m *MockGitWorktree) Status() (git.Status, error) {
+	args := m.Called()
+
+	return args.Get(0).(git.Status), args.Error(1)
+}
+
 type MockIamSvc struct {
 	mock.Mock
 	iam.IAM

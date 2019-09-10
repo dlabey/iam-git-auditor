@@ -10,6 +10,7 @@ type Worktree interface {
 	Add(string) (plumbing.Hash, error)
 	Commit(string, *git.CommitOptions) (plumbing.Hash, error)
 	Remove(string) (plumbing.Hash, error)
+	Status() (git.Status, error)
 }
 
 type Repository interface {
